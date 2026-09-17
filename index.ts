@@ -6,6 +6,12 @@ app.use(express.json());
 
 const validateOtp: Record<string, string> = {};
 
+let request: Record<string, number> = {};
+
+setInterval(() => {
+    request = {};
+}, 60 * 1000);
+
 app.post("/generate-otp", (req, res) => {
     const { email } = req.body;
 
@@ -25,6 +31,17 @@ app.post("/generate-otp", (req, res) => {
 app.post("/verify-otp", (req, res) => {
     const { email, otp, newPassword } = req.body;
 
+    if(!request[email]){
+        request[email] = 1;
+    }else{
+        request[email]++;
+    }
+
+    if(request[email] >=10 ){
+        return res.status(429).json({
+            message: "Too many attempts, please try again later"
+        });
+    }
     if (
         validateOtp[email] !== undefined &&
         validateOtp[email] === otp.toString()
